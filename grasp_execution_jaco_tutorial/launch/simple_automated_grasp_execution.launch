@@ -21,7 +21,7 @@
     <arg name="table_filename" default="$(find jaco_graspit_sample)/models/obstacles/table.xml"/>
     <arg name="results_directory" default="/tmp/simple_automated_grasp_execution/"/>
 
-    <include file="$(find grasp_execution)/launch/simple_automated_grasp_execution.launch">
+    <include file="$(find grasp_execution)/launch/simple_automated_grasp_execution_unity.launch">
         <arg name="config_file" value="$(arg config_file)"/>
         <arg name="run_type" value="$(arg run_type)"/>
         <arg name="grasp_filename" value="$(arg grasp_filename)"/>

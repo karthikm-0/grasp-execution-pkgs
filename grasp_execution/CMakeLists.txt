@@ -124,6 +124,9 @@ add_dependencies(simple_grasp_action_client simple_grasp_action_server ${${PROJE
 add_executable(simple_automated_grasp_execution_node src/simple_automated_grasp_execution.cpp)
 add_dependencies(simple_automated_grasp_execution_node simple_automated_grasp_execution simple_grasp_action_server ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(unity_grasp_execution_node src/unity_grasp_execution_node.cpp)
+add_dependencies(unity_grasp_execution_node simple_automated_grasp_execution ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 target_link_libraries(simple_grasp_control_server
   ${catkin_LIBRARIES}
 )
@@ -155,6 +158,11 @@ target_link_libraries(simple_automated_grasp_execution
 )
 
 target_link_libraries(simple_automated_grasp_execution_node
+  simple_automated_grasp_execution
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(unity_grasp_execution_node 
   simple_automated_grasp_execution
   ${catkin_LIBRARIES}
 )
