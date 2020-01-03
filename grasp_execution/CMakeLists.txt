@@ -23,6 +23,23 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_planning_helper
   moveit_object_handling
   grasp_planning_graspit_ros
+  message_generation
+  gazebo_msgs
+)
+
+################################################
+## Generate Service File ##
+################################################
+add_service_files(
+  FILES 
+  GetModelStates.srv)
+
+################################################
+## Generate Message File ##
+################################################
+generate_messages(
+  DEPENDENCIES
+  std_msgs gazebo_msgs
 )
 
 ################################################

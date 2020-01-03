@@ -21,16 +21,6 @@ def main():
     rospy.Subscriber("move_box", ModelState, move_box)
     rospy.spin()
 
-    '''state_msg = ModelState()
-    state_msg.model_name = 'cube1'
-    state_msg.pose.position.x = 1
-    state_msg.pose.position.y = 0
-    state_msg.pose.position.z = 0.76
-    state_msg.pose.orientation.x = 0
-    state_msg.pose.orientation.y = 0
-    state_msg.pose.orientation.z = 0
-    state_msg.pose.orientation.w = 0'''
-
 if __name__ == '__main__':
     try:
         main()
