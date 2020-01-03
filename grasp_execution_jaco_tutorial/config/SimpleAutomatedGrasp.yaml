@@ -21,7 +21,7 @@ graspit_object_pose:
     qz: 0
     qw: 1
 
-pose_above_object: 0.175
+pose_above_object: 0.178
 x_from_object: 0.0
 y_from_object: -0.02
 open_angles: 0.05

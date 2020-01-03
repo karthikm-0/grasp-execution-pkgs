@@ -4,6 +4,7 @@
 #include <grasp_execution/SimpleAutomatedGraspFromFile.h>
 #include <grasp_execution/SimpleAutomatedGraspOnlinePlanning.h>
 
+std::string GRASP_FILENAME;
 
 int executeGrasp(const std::string& objectToGrasp) 
 {
@@ -11,6 +12,7 @@ int executeGrasp(const std::string& objectToGrasp)
     // Setup grasp
     grasp_execution::SimpleAutomatedGraspExecution * graspExe;
     graspExe = new grasp_execution::SimpleAutomatedGraspFromTop();
+    //graspExe = new grasp_execution::SimpleAutomatedGraspFromFile(GRASP_FILENAME);
 
     // Make sure we can execute grasp
     if (!graspExe)
@@ -20,9 +22,13 @@ int executeGrasp(const std::string& objectToGrasp)
       }
 
     //ROS_INFO("The following object was selected: [%s]", msg->data.c_str());
-
+    
+    if (!graspExe->init() || !graspExe->graspHomeAndUngrasp(objectToGrasp))
+      {
+        ROS_ERROR("Failed to run automated grasp execution");
+      }
     // Attempt grasp
-    if (!graspExe->init() || !graspExe->graspHomeAndUngrasp("cube1"))
+    /*if (!graspExe->init() || !graspExe->graspHomeAndUngrasp("cube1"))
       {
         ROS_ERROR("Failed to run automated grasp execution");
       }
@@ -30,9 +36,8 @@ int executeGrasp(const std::string& objectToGrasp)
     if (!graspExe->init() || !graspExe->graspHomeAndUngrasp("cube2"))
       {
         ROS_ERROR("Failed to run automated grasp execution");
-      }
+      }*/
     
-
     return 0;
 }
 
@@ -41,7 +46,8 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     ROS_INFO("Object Selected: [%s]", msg->data.c_str());
     // Depending on which object is clicked in Unity
     std::string objectToGrasp;
-    if (msg->data == "cube1") 
+    objectToGrasp = msg->data;
+    /*if (msg->data == "cube1") 
     {
       // Red
       objectToGrasp = "cube1";
@@ -51,7 +57,7 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     {
       // Blue
       objectToGrasp = "cube2";
-    }
+    }*/
 
     // Set up and execute grasp
     executeGrasp(objectToGrasp);
@@ -88,8 +94,15 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     }
     priv.getParam("run_type",RUN_TYPE);
     
-    std::string GRASP_FILENAME;
+    //std::string GRASP_FILENAME;
     priv.getParam("grasp_filename",GRASP_FILENAME);
+    if ((RUN_TYPE==2) && (!priv.hasParam("grasp_filename") || GRASP_FILENAME.empty()))
+    {
+      {
+        ROS_ERROR("run_type = 2 requires additional specification of 'grasp_filename'");
+        return 0;
+      }
+    }
 
     ros::spin();
     return 0;

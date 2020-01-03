@@ -408,6 +408,45 @@ bool SimpleAutomatedGraspExecution::homeArm()
     return true;
 }
 
+bool SimpleAutomatedGraspExecution::moveArmToCartesian(const std::string& object_name)
+{   
+    // Arbritary pose to place the object in
+    std::string effector_link = jointsManager->getEffectorLink();
+    std::string arm_base_link = jointsManager->getArmLinks().front();
+    std::string palmLinkName = jointsManager->getPalmLink();
+
+    geometry_msgs::PoseStamped object_target_pose;
+    object_target_pose.header.frame_id = "tabletop_ontop";
+    object_target_pose.pose.position.x = 0.5;
+    object_target_pose.pose.position.y = 0.0;
+    object_target_pose.pose.position.z = 0.2;
+    object_target_pose.pose.orientation.w = 1;
+    object_target_pose.pose.orientation.x = 0;
+    object_target_pose.pose.orientation.y = 0;
+    object_target_pose.pose.orientation.w = 0;
+
+    // build planning constraints
+    float plan_eff_pos_tol = EFF_POS_TOL * PLAN_TOLERANCE_FACTOR;
+    float plan_eff_ori_tol = EFF_ORI_TOL * PLAN_TOLERANCE_FACTOR;
+    int type = 1; // 0 = only position, 1 = pos and ori, 2 = only ori
+    moveit_msgs::Constraints reachConstraints = trajectoryPlanner->getPoseConstraint(effector_link, 
+        object_target_pose, plan_eff_pos_tol, plan_eff_ori_tol, type); 
+
+    int motionRet = planAndExecuteMotion(
+        object_target_pose.header.frame_id,
+        arm_base_link,
+        reachConstraints,
+        ARM_REACH_SPAN,
+        PLANNING_GROUP);
+        
+    if (motionRet !=0)
+    {
+        ROS_ERROR_STREAM("Could not plan/execution motion, return code "<<motionRet);
+        return false;
+    }
+    return true;
+}
+
 
 bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& object_name)
 {
@@ -431,13 +470,21 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
         ROS_ERROR_STREAM("Could not grasp "<<object_name);
         return false;
     }
+
+    ROS_INFO_STREAM("###### Repositioning #######");
+    if (!moveArmToCartesian(object_name))
+    {
+        ROS_ERROR_STREAM("Could not move to object goal state "<<object_name);
+        return false;
+    }
     
-    ROS_INFO_STREAM("###### Homing arm #######");
+    /*ROS_INFO_STREAM("###### Homing arm #######");
     if (!homeArm())
     {
         ROS_ERROR_STREAM("Could not home the arm after grasping "<<object_name);
         return false;
-    }
+    }*/
+
     ROS_INFO_STREAM("###### Un-Grasp Planning #######");
     grasp_execution_msgs::GraspGoal ungraspGoal;
     if (!graspPlan(object_name, false, ungraspGoal))
@@ -452,5 +499,13 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
         ROS_ERROR_STREAM("Could not un-grasp "<<object_name);
         return false;
     }
+
+    ROS_INFO_STREAM("###### Homing arm #######");
+    if (!homeArm())
+    {
+        ROS_ERROR_STREAM("Could not home the arm after grasping "<<object_name);
+        return false;
+    }
+
     return true;
 }

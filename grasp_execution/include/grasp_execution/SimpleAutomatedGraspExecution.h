@@ -32,28 +32,38 @@ public:
     virtual ~SimpleAutomatedGraspExecution();
 
     bool init();
+    
     /**
      * Plans a grasp for this object
      * \param doGrasp if true, plan a grasp. If false, plan for an un-grasp
      */
     bool graspPlan(const std::string& object_name, bool doGrasp, grasp_execution_msgs::GraspGoal& graspGoal);
+    
     /**
      * Does motion planning and execution to reach to the object before grasping it
      */
     bool reach(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
+    
     /**
      * Grasps the object
      */
     bool grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
+   
     /**
      * Un-grasps the object
      */
     bool unGrasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
+    
     /**
      * Homes the arm
      */
     bool homeArm();
-
+    
+    /** 
+     * Plan and move to arbitrary position as output object state
+     */
+    bool moveArmToCartesian(const std::string& object_name);
+    
     /**
      * Test method which grasps the object, homes the arm, and then ungrasps
      * the object.

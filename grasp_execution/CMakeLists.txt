@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   grasp_execution_msgs
   roscpp
+  rospy
   actionlib actionlib_msgs
   std_msgs
   control_msgs
