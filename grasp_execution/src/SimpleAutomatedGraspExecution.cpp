@@ -500,12 +500,12 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
         return false;
     }
 
-    ROS_INFO_STREAM("###### Homing arm #######");
+    /*ROS_INFO_STREAM("###### Homing arm #######");
     if (!homeArm())
     {
         ROS_ERROR_STREAM("Could not home the arm after grasping "<<object_name);
         return false;
-    }
+    }*/
 
     return true;
 }

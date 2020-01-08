@@ -41,12 +41,39 @@ int executeGrasp(const std::string& objectToGrasp)
     return 0;
 }
 
+int homing()
+{
+    ROS_INFO("Attempting to home arm");
+    grasp_execution::SimpleAutomatedGraspExecution * graspExe;
+    graspExe = new grasp_execution::SimpleAutomatedGraspFromTop();
+    if (!graspExe)
+      {
+        ROS_ERROR("Unknown run type");
+        return 1;
+      }
+
+    if (!graspExe->init() || !graspExe->homeArm())
+      {
+        ROS_ERROR("Failed to home arm");
+      }
+}
+
 void selectCube(const std_msgs::String::ConstPtr& msg)
 { 
     ROS_INFO("Object Selected: [%s]", msg->data.c_str());
     // Depending on which object is clicked in Unity
     std::string objectToGrasp;
-    objectToGrasp = msg->data;
+    if(msg->data == "h")
+    {
+      homing();
+    }
+
+    else 
+    {
+      objectToGrasp = msg->data;
+      executeGrasp(objectToGrasp);
+    }
+
     /*if (msg->data == "cube1") 
     {
       // Red
@@ -60,7 +87,6 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     }*/
 
     // Set up and execute grasp
-    executeGrasp(objectToGrasp);
 }
 
   int main(int argc, char **argv)
@@ -71,7 +97,7 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
 
     // Subscribe to topic
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("cube_selection", 1000, selectCube);
+    ros::Subscriber sub = n.subscribe("cube_selection", 1, selectCube);
 
     // Create server for grasping
     ros::NodeHandle priv("~");
