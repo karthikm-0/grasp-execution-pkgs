@@ -14,6 +14,8 @@
 #include <gazebo_msgs/SetModelState.h>
 #include <gazebo_msgs/SetLinkProperties.h>
 
+#include <gazebo_msgs/GetModelState.h>
+
 using grasp_execution::SimpleAutomatedGraspExecution;
 
 using object_msgs_tools::ObjectFunctions;
@@ -356,22 +358,37 @@ bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const 
     std::string palmLinkName = jointsManager->getPalmLink();
     graspHandler->attachObjectToRobot(object_name,palmLinkName);
 
+    // Elevate object slightly
+    // Get model's current pose first
+    ros::NodeHandle n;
+    ros::ServiceClient gz_client1 = n.serviceClient<gazebo_msgs::GetModelState>("/gazebo/get_model_state");
+    gazebo_msgs::GetModelState getSrv;
+    getSrv.request.model_name = object_name;
+    getSrv.request.relative_entity_name = "world";
+    gz_client1.call(getSrv);
+    geometry_msgs::Pose obj_pose = getSrv.response.pose;
+
+    // Set the pose next (slightly elevated)
+    ros::ServiceClient gz_client2 = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+    gazebo_msgs::SetModelState setSrv;
+    setSrv.request.model_state.model_name = object_name;
+    setSrv.request.model_state.pose.position.x = obj_pose.position.x;
+    setSrv.request.model_state.pose.position.y = obj_pose.position.y;
+    setSrv.request.model_state.pose.position.z = 0.81;  
+    setSrv.request.model_state.pose.orientation.w = obj_pose.orientation.w;
+    setSrv.request.model_state.pose.orientation.x = obj_pose.orientation.x;
+    setSrv.request.model_state.pose.orientation.y = obj_pose.orientation.y;
+    setSrv.request.model_state.pose.orientation.z = obj_pose.orientation.z;
+    ROS_INFO_STREAM(gz_client2.call(setSrv));
+
     // Remove gravity
     //Set_model_state azebo::GazeboRosApiPlugin::setPhysicsProperties
-    ros::NodeHandle n;
-    /*ros::ServiceClient p_client = n.serviceClient<gazebo_msgs::SetPhysicsProperties>("/gazebo/set_physics_properties");
-    gazebo_msgs::SetPhysicsProperties pSrv;
-    pSrv.request.gravity.x = 0;
-    pSrv.request.gravity.y = 0;
-    pSrv.request.gravity.z = 1;
-    ROS_INFO_STREAM(p_client.call(pSrv));*/
-
-    // Elevate object slightly
-    /*ros::ServiceClient gz_client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-    gazebo_msgs::SetModelState mSrv;
-    mSrv.request.model_state.model_name = object_name;
-    mSrv.request.model_state.pose.position.z += 0.05;  
-    ROS_INFO_STREAM(gz_client.call(mSrv));*/
+    ros::ServiceClient grav_client = n.serviceClient<gazebo_msgs::SetLinkProperties>("/gazebo/set_link_properties");
+    gazebo_msgs::SetLinkProperties removeSrv;
+    std::string link_name = object_name + std::string("::link");
+    removeSrv.request.link_name = link_name;
+    removeSrv.request.gravity_mode = 0;
+    ROS_INFO_STREAM(grav_client.call(removeSrv));
 
     // Attach the correct links together (of the cube and arm)
     //ros::NodeHandle n;
