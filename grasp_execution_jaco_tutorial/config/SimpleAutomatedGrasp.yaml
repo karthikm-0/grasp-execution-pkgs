@@ -21,10 +21,10 @@ graspit_object_pose:
     qz: 0
     qw: 1
 
-pose_above_object: 0.178
+pose_above_object: 0.21
 x_from_object: 0.0
 y_from_object: -0.02
-open_angles: 0.05
+open_angles: 0.0
 close_angles: 0.6
 effector_pos_tolerance: 0.02
 effector_ori_tolerance: 0.1

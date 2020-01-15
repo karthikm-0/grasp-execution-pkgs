@@ -5,6 +5,14 @@
 #include <object_msgs/Object.h>
 #include <object_msgs/ObjectInfo.h>
 #include <object_msgs_tools/ObjectFunctions.h>
+#include <ros/ros.h>
+#include <gazebo_ros_link_attacher/Attach.h>
+#include <gazebo_ros_link_attacher/AttachRequest.h>
+#include <gazebo_ros_link_attacher/AttachResponse.h>
+
+#include <gazebo_msgs/SetPhysicsProperties.h>
+#include <gazebo_msgs/SetModelState.h>
+#include <gazebo_msgs/SetLinkProperties.h>
 
 using grasp_execution::SimpleAutomatedGraspExecution;
 
@@ -325,7 +333,7 @@ bool SimpleAutomatedGraspExecution::reach(const std::string& object_name, const 
     
 bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
 {
-    graspActionClient->sendGoal(graspGoal);
+    /*graspActionClient->sendGoal(graspGoal);
 
     //wait for the action to return
     bool finished_before_timeout = graspActionClient->waitForResult(ros::Duration(15.0));
@@ -342,17 +350,55 @@ bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const 
         }
         return false;
     }
-    ROS_INFO("Grasp action finished: %s",state.toString().c_str());
+    ROS_INFO("Grasp action finished: %s",state.toString().c_str());*/
 
-    // attach object to MoveIt! robot
+    // Attach object to MoveIt! robot
     std::string palmLinkName = jointsManager->getPalmLink();
     graspHandler->attachObjectToRobot(object_name,palmLinkName);
+
+    // Remove gravity
+    //Set_model_state azebo::GazeboRosApiPlugin::setPhysicsProperties
+    ros::NodeHandle n;
+    /*ros::ServiceClient p_client = n.serviceClient<gazebo_msgs::SetPhysicsProperties>("/gazebo/set_physics_properties");
+    gazebo_msgs::SetPhysicsProperties pSrv;
+    pSrv.request.gravity.x = 0;
+    pSrv.request.gravity.y = 0;
+    pSrv.request.gravity.z = 1;
+    ROS_INFO_STREAM(p_client.call(pSrv));*/
+
+    // Elevate object slightly
+    /*ros::ServiceClient gz_client = n.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+    gazebo_msgs::SetModelState mSrv;
+    mSrv.request.model_state.model_name = object_name;
+    mSrv.request.model_state.pose.position.z += 0.05;  
+    ROS_INFO_STREAM(gz_client.call(mSrv));*/
+
+    // Attach the correct links together (of the cube and arm)
+    //ros::NodeHandle n;
+    ros::ServiceClient client = n.serviceClient<gazebo_ros_link_attacher::Attach>("/link_attacher_node/attach");
+    gazebo_ros_link_attacher::Attach attachSrv;
+    attachSrv.request.model_name_1 = "jaco_on_table";
+    attachSrv.request.link_name_1 = "jaco_6_hand_limb";
+    attachSrv.request.model_name_2 = object_name;
+    attachSrv.request.link_name_2 = "link";
+    ROS_INFO_STREAM(client.call(attachSrv));
+
     return true;
+
+    /*if(client.call(attachSrv.request))
+    {
+        ROS_INFO_STREAM(attachSrv.response);
+        return true;
+    }
+    else 
+    {
+        return false;
+    }*/
 }
 
 bool SimpleAutomatedGraspExecution::unGrasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
 {
-    graspActionClient->sendGoal(graspGoal);
+    /*graspActionClient->sendGoal(graspGoal);
 
     //wait for the action to return
     bool finished_before_timeout = graspActionClient->waitForResult(ros::Duration(15.0));
@@ -369,10 +415,29 @@ bool SimpleAutomatedGraspExecution::unGrasp(const std::string& object_name, cons
         }
         return false;
     }
-    ROS_INFO("Grasp action finished: %s",state.toString().c_str());
+    ROS_INFO("Grasp action finished: %s",state.toString().c_str());*/
 
     // dettach object to MoveIt! robot
     graspHandler->detachObjectFromRobot(object_name);
+
+    // Detach the links between object and arm
+    ros::NodeHandle n;
+    ros::ServiceClient client = n.serviceClient<gazebo_ros_link_attacher::Attach>("/link_attacher_node/detach");
+    gazebo_ros_link_attacher::Attach attachSrv;
+    attachSrv.request.model_name_1 = "jaco_on_table";
+    attachSrv.request.link_name_1 = "jaco_6_hand_limb";
+    attachSrv.request.model_name_2 = object_name;
+    attachSrv.request.link_name_2 = "link";
+    ROS_INFO_STREAM(client.call(attachSrv));
+
+    // Enable gravity
+    ros::ServiceClient gz_client = n.serviceClient<gazebo_msgs::SetLinkProperties>("/gazebo/set_link_properties");
+    gazebo_msgs::SetLinkProperties setSrv;
+    std::string link_name = object_name + std::string("::link");
+    setSrv.request.link_name = link_name;
+    setSrv.request.gravity_mode = 1;
+    ROS_INFO_STREAM(gz_client.call(setSrv));
+
     return true;
 }
 
