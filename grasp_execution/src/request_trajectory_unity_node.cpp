@@ -3,6 +3,7 @@
 #include <grasp_execution/SimpleAutomatedGraspFromTop.h>
 #include <grasp_execution/SimpleAutomatedGraspFromFile.h>
 #include <grasp_execution/SimpleAutomatedGraspOnlinePlanning.h>
+#include <grasp_execution/RequestTrajectory.h>
 
 std::string GRASP_FILENAME;
 
@@ -133,7 +134,14 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     // Set up and execute grasp
 }
 
-  int main(int argc, char **argv)
+bool trajectory(grasp_execution::RequestTrajectory::Request &req,
+grasp_execution::RequestTrajectory::Response &res)
+{
+  ROS_INFO("Success, you have requested trajectory!");
+  return true;
+}
+
+int main(int argc, char **argv)
 {
     // Create node to get info from the cube interface in Unity
     //ros::init(argc, argv, "cube_selection_node");
@@ -154,7 +162,6 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
       return 0;
     }
     priv.getParam("object_name",OBJECT_NAME);
-    //priv.getParam("object_name2",OBJECT_NAME2);
 
     int RUN_TYPE;
     if (!priv.hasParam("run_type"))
@@ -174,8 +181,13 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
       }
     }
 
-    ros::spin();
+    // Launch a service to request trajectories
+    ros::ServiceServer service = n.advertiseService("request_trajectories_srv", trajectory);
+
+
+
     //executeGrasp("Box1"); 
+    ros::spin();
     
     return 0;
 }

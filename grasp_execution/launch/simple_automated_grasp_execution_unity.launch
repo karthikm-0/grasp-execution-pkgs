@@ -57,7 +57,8 @@
     </include>    
 
     # Load the ROS parameters from config file: 
-    <arg name="node_name" default="unity_grasp_execution_node"/>
+    <!--arg name="node_name" default="unity_grasp_execution_node"/-->
+    <arg name="node_name" default="request_trajectory_unity_node"/>
     <!--arg name="node_name" default="simple_automated_grasp_execution"/-->
     <rosparam ns="$(arg node_name)" file="$(arg config_file)"/>
 
@@ -68,7 +69,8 @@
     </include>
  
     # launch the node
-    <node name="unity_grasp_execution_node" pkg="grasp_execution" type="unity_grasp_execution_node"
+    <!--node name="unity_grasp_execution_node" pkg="grasp_execution" type="unity_grasp_execution_node"-->
+    <node name="request_trajectory_unity_node" pkg="grasp_execution" type="request_trajectory_unity_node"
         args="$(arg cube_name) $(arg run_type) $(arg grasp_filename)" output="screen">
         <param name="object_name" value="$(arg cube_name)"/>
         <param name="run_type" value="$(arg run_type)"/>

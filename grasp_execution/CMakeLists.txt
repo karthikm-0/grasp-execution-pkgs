@@ -32,14 +32,14 @@ find_package(catkin REQUIRED COMPONENTS
 ################################################
 add_service_files(
   FILES 
-  GetModelStates.srv)
+  GetModelStates.srv RequestTrajectory.srv)
 
 ################################################
 ## Generate Message File ##
 ################################################
 generate_messages(
   DEPENDENCIES
-  std_msgs gazebo_msgs
+  std_msgs gazebo_msgs moveit_msgs
 )
 
 ################################################
@@ -145,6 +145,10 @@ add_dependencies(simple_automated_grasp_execution_node simple_automated_grasp_ex
 add_executable(unity_grasp_execution_node src/unity_grasp_execution_node.cpp)
 add_dependencies(unity_grasp_execution_node simple_automated_grasp_execution ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+add_executable(request_trajectory_unity_node src/request_trajectory_unity_node.cpp)
+add_dependencies(request_trajectory_unity_node simple_automated_grasp_execution ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
 target_link_libraries(simple_grasp_control_server
   ${catkin_LIBRARIES}
 )
@@ -181,6 +185,11 @@ target_link_libraries(simple_automated_grasp_execution_node
 )
 
 target_link_libraries(unity_grasp_execution_node 
+  simple_automated_grasp_execution
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(request_trajectory_unity_node 
   simple_automated_grasp_execution
   ${catkin_LIBRARIES}
 )

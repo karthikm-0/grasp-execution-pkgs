@@ -1,0 +1,42 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/karthikm/hrc_task_alloc_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/convenience-pkgs/arm_components_name_manager/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/convenience-pkgs/baselib_binding/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/convenience-pkgs/convenience_math_functions/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/convenience-pkgs/convenience_ros_functions/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo-pkgs/gazebo_grasp_plugin/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/joint-control-pkgs/gazebo_joint_control/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo_ros_link_attacher/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo-pkgs/gazebo_state_plugins/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo-pkgs/gazebo_test_tools/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo-pkgs/gazebo_version_helpers/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/gazebo-pkgs/gazebo_world_plugin_loader/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/grasp-execution-pkgs/grasp_execution/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/graspit-pkgs/grasp_planning_graspit/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/graspit-pkgs/grasp_planning_graspit_ros/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/jaco-arm-pkgs/jaco_arm/jaco_joints/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/joint-control-pkgs/joint_trajectory_execution/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/convenience-pkgs/logger_binding/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/moveit-pkgs/moveit_controller_multidof/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/moveit-pkgs/moveit_object_handling/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/moveit-pkgs/moveit_planning_helper/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/general-message-pkgs/object_msgs_tools/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/graspit-pkgs/urdf2graspit/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/urdf-tools-pkgs/urdf2inventor/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/urdf-tools-pkgs/urdf_transform/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/urdf-tools-pkgs/urdf_traverser/include/**",
+        "/home/karthikm/hrc_task_alloc_ws/src/hrc-task-alloc-ros/urdf-tools-pkgs/urdf_viewer/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ]
+}

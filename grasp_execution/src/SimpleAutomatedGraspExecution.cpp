@@ -266,6 +266,11 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
         return -2;
     }
 
+    else
+    {
+        ROS_INFO_STREAM(robotTrajectory.joint_trajectory);
+    }
+
 
     // ROS_INFO("############  Resulting joint trajectory ################");
     // ROS_INFO_STREAM(robotTrajectory.joint_trajectory);
@@ -275,7 +280,7 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
     //ROS_INFO("Now constructing joint trajectory goal");
 
     // send a goal to the action
-    control_msgs::FollowJointTrajectoryGoal jtGoal;
+    /*control_msgs::FollowJointTrajectoryGoal jtGoal;
     jtGoal.trajectory = robotTrajectory.joint_trajectory;
 
     ROS_INFO("Now sending joint trajectory goal");
@@ -296,7 +301,7 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
         }
         return -3;
     }
-    ROS_INFO("Joint trajectory action finished: %s",state.toString().c_str());
+    ROS_INFO("Joint trajectory action finished: %s",state.toString().c_str());*/
     return 0;
 }
 
@@ -546,7 +551,7 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
         return false;
     }
     
-    ROS_INFO_STREAM("###### Grasping #######");
+    /*ROS_INFO_STREAM("###### Grasping #######");
     if (!grasp(object_name, graspGoal))
     {
         ROS_ERROR_STREAM("Could not grasp "<<object_name);
@@ -580,7 +585,7 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
     {
         ROS_ERROR_STREAM("Could not home the arm after grasping "<<object_name);
         return false;
-    }
+    }*/
 
     return true;
 }

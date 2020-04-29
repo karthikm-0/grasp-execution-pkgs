@@ -1,0 +1,7 @@
+# Request the object you want to pick up
+string name
+
+---
+
+# Get back robot trajectory
+moveit_msgs/RobotTrajectory robotTrajectory
