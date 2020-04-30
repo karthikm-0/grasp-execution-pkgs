@@ -137,7 +137,36 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
 bool trajectory(grasp_execution::RequestTrajectory::Request &req,
 grasp_execution::RequestTrajectory::Response &res)
 {
+  grasp_execution::SimpleAutomatedGraspExecution * graspExe;
+  graspExe = new grasp_execution::SimpleAutomatedGraspFromTop();
+  
+  // Make sure we can execute grasp
+  if (!graspExe)
+  {
+      ROS_ERROR("Unknown run type");
+      return false;
+  }
+
+  /*if (!graspExe->init() || !graspExe->graspHomeAndUngrasp(req.name))
+  {
+      ROS_ERROR("Failed to run automated grasp execution");
+      return false;
+  }*/
+
+  // Plan grasp and reach
+  if(!graspExe->init())
+  {
+    ROS_ERROR("Failed to run automated grasp execution");
+  }
+
+  else
+  {
+    res.robotTrajectory = graspExe->graspAndReachPlan(req.name);
+  }
+
+  ROS_INFO_STREAM(res.robotTrajectory.joint_trajectory);
   ROS_INFO("Success, you have requested trajectory!");
+
   return true;
 }
 

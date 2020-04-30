@@ -11,6 +11,7 @@
 #include <moveit_object_handling/GraspedObjectHandler.h>
 
 #include <control_msgs/FollowJointTrajectoryAction.h>
+#include <moveit_msgs/RobotTrajectory.h>
 
 namespace grasp_execution
 {
@@ -45,6 +46,11 @@ public:
     bool reach(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
     
     /**
+     * Does motion planning but no execution
+     */
+    moveit_msgs::RobotTrajectory reachPlan(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
+    
+    /**
      * Grasps the object
      */
     bool grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
@@ -69,6 +75,11 @@ public:
      * the object.
      */
     bool graspHomeAndUngrasp(const std::string& object_name);
+
+    /**
+     * Test method to run grasp plan and reach plan
+     */
+    moveit_msgs::RobotTrajectory graspAndReachPlan(const std::string& object_name);
 
 protected:
     virtual bool initImpl()=0;
@@ -104,6 +115,13 @@ protected:
      * \retval -3 execution failed
      */
     int planAndExecuteMotion(
+        const std::string& fixed_frame_id,
+        const std::string& arm_base_link,
+        moveit_msgs::Constraints& reachConstraints,
+        const float arm_reach_span,
+        const std::string& planning_group); 
+        
+    moveit_msgs::RobotTrajectory planMotion(
         const std::string& fixed_frame_id,
         const std::string& arm_base_link,
         moveit_msgs::Constraints& reachConstraints,

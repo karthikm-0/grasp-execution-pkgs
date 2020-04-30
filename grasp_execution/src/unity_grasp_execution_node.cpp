@@ -13,6 +13,7 @@ std::list<std::string> allocatedObjects;
 int executeGrasp(const std::string& objectToGrasp) 
 {
     ROS_INFO("Attempting grasp on: [%s]", objectToGrasp.c_str());
+    
     // Setup grasp
     grasp_execution::SimpleAutomatedGraspExecution * graspExe;
     graspExe = new grasp_execution::SimpleAutomatedGraspFromTop();
@@ -176,6 +177,6 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
 
     ros::spin();
     //executeGrasp("Box1"); 
-    
+
     return 0;
 }

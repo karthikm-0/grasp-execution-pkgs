@@ -16,6 +16,8 @@
 
 #include <gazebo_msgs/GetModelState.h>
 
+#include <moveit_msgs/RobotTrajectory.h>
+
 using grasp_execution::SimpleAutomatedGraspExecution;
 
 using object_msgs_tools::ObjectFunctions;
@@ -268,7 +270,7 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
 
     else
     {
-        ROS_INFO_STREAM(robotTrajectory.joint_trajectory);
+        //ROS_INFO_STREAM(robotTrajectory.joint_trajectory);
     }
 
 
@@ -280,7 +282,7 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
     //ROS_INFO("Now constructing joint trajectory goal");
 
     // send a goal to the action
-    /*control_msgs::FollowJointTrajectoryGoal jtGoal;
+    control_msgs::FollowJointTrajectoryGoal jtGoal;
     jtGoal.trajectory = robotTrajectory.joint_trajectory;
 
     ROS_INFO("Now sending joint trajectory goal");
@@ -301,10 +303,65 @@ int SimpleAutomatedGraspExecution::planAndExecuteMotion(
         }
         return -3;
     }
-    ROS_INFO("Joint trajectory action finished: %s",state.toString().c_str());*/
+
+    ROS_INFO("Joint trajectory action finished: %s",state.toString().c_str());
     return 0;
 }
 
+moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::planMotion(
+    const std::string& fixed_frame_id,
+    const std::string& arm_base_link,
+    moveit_msgs::Constraints& reachConstraints,
+    const float arm_reach_span,
+    const std::string& planning_group)
+{
+    // Final trajectory we will send out
+    moveit_msgs::RobotTrajectory robotTrajectory;
+
+    // get the current arm base pose.
+    geometry_msgs::PoseStamped currBasePose;
+    int transRet=convenience_ros_functions::ROSFunctions::Singleton()->getTransform(
+            fixed_frame_id, arm_base_link,
+            currBasePose.pose,
+            ros::Time(0),2,true);
+    if (transRet!=0) {
+        ROS_ERROR("Could not get current effector tf transform in object frame.");
+        return robotTrajectory;
+    }
+    
+    currBasePose.header.stamp=ros::Time::now();
+    currBasePose.header.frame_id=fixed_frame_id;
+    // ROS_INFO_STREAM("Effector currBasePose pose: "<<currBasePose);
+ 
+    // request joint trajectory
+    sensor_msgs::JointState currArmJointState = robotInfo.getCurrentJointState(JOINT_STATES_TOPIC, node);
+    // get only the arm joints of the joint state:
+    jointsManager->extractFromJointState(currArmJointState,0,currArmJointState);
+    // ROS_INFO_STREAM("Current arm joint state: "<<currArmJointState);
+
+    ROS_INFO("Planning trajectory...");
+    moveit_msgs::MoveItErrorCodes moveitRet = trajectoryPlanner->requestTrajectory(
+        currBasePose,
+        arm_reach_span,
+        planning_group,
+        reachConstraints,
+        NULL,
+        currArmJointState,
+        robotTrajectory);
+
+    if (moveitRet.val != moveit_msgs::MoveItErrorCodes::SUCCESS)
+    {
+        ROS_ERROR("Could not plan joint trajectory");
+        return robotTrajectory;
+    }
+
+    else
+    {
+        ROS_INFO_STREAM(robotTrajectory.joint_trajectory);
+    }
+
+    return robotTrajectory;
+}
 
 bool SimpleAutomatedGraspExecution::graspPlan(const std::string& object_name, bool doGrasp, grasp_execution_msgs::GraspGoal& graspGoal)
 {
@@ -336,6 +393,29 @@ bool SimpleAutomatedGraspExecution::reach(const std::string& object_name, const 
         return false;
     }
     return true;
+}
+
+moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::reachPlan(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
+{
+      std::string effector_link = jointsManager->getEffectorLink();
+    std::string arm_base_link = jointsManager->getArmLinks().front();
+    std::string object_frame_id = object_name;
+  
+    // build planning constraints:
+    float plan_eff_pos_tol = EFF_POS_TOL * PLAN_TOLERANCE_FACTOR;
+    float plan_eff_ori_tol = EFF_ORI_TOL * PLAN_TOLERANCE_FACTOR;
+    int type = 1; // 0 = only position, 1 = pos and ori, 2 = only ori
+    moveit_msgs::Constraints reachConstraints = trajectoryPlanner->getPoseConstraint(effector_link,
+        graspGoal.grasp.grasp.grasp_pose, plan_eff_pos_tol, plan_eff_ori_tol, type); 
+
+    moveit_msgs::RobotTrajectory trajectory = planMotion(
+        object_frame_id,
+        arm_base_link,
+        reachConstraints,
+        ARM_REACH_SPAN,
+        PLANNING_GROUP);
+
+    return trajectory;
 }
     
 bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
@@ -534,6 +614,21 @@ bool SimpleAutomatedGraspExecution::moveArmToCartesian(const std::string& object
     return true;
 }
 
+moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::graspAndReachPlan(const std::string& object_name)
+{
+    grasp_execution_msgs::GraspGoal graspGoal;
+    ROS_INFO_STREAM("###### Grasp Planning #######");
+    if (!graspPlan(object_name, true, graspGoal))
+    {
+        ROS_ERROR_STREAM("Could not plan the grasp for "<<object_name);
+    }
+
+    ROS_INFO_STREAM("###### Planning ######");
+    moveit_msgs::RobotTrajectory trajectory = reachPlan(object_name, graspGoal);  
+    return trajectory; 
+
+    ROS_INFO_STREAM("###### Finished grasp and reach planning #######");
+}
 
 bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& object_name)
 {
@@ -544,12 +639,18 @@ bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& objec
         ROS_ERROR_STREAM("Could not plan the grasp for "<<object_name);
         return false;
     }
-    ROS_INFO_STREAM("###### Reaching #######");
+
+    ROS_INFO_STREAM("###### Planning ######");
+    moveit_msgs::RobotTrajectory trajectory = reachPlan(object_name, graspGoal);
+    //ROS_INFO_STREAM(trajectory.joint_trajectory);
+    
+
+    /*ROS_INFO_STREAM("###### Reaching #######");
     if (!reach(object_name, graspGoal))
     {
         ROS_ERROR_STREAM("Could not reach to "<<object_name);
         return false;
-    }
+    }*/
     
     /*ROS_INFO_STREAM("###### Grasping #######");
     if (!grasp(object_name, graspGoal))
