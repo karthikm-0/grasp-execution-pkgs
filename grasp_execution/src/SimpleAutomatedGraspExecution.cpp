@@ -17,6 +17,20 @@
 #include <gazebo_msgs/GetModelState.h>
 
 #include <moveit_msgs/RobotTrajectory.h>
+#include <tf/transform_datatypes.h>
+
+////
+
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+
+#include <moveit_msgs/DisplayRobotState.h>
+#include <moveit_msgs/DisplayTrajectory.h>
+
+#include <moveit_msgs/AttachedCollisionObject.h>
+#include <moveit_msgs/CollisionObject.h>
+
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
 using grasp_execution::SimpleAutomatedGraspExecution;
 
@@ -397,7 +411,7 @@ bool SimpleAutomatedGraspExecution::reach(const std::string& object_name, const 
 
 moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::reachPlan(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
 {
-      std::string effector_link = jointsManager->getEffectorLink();
+    std::string effector_link = jointsManager->getEffectorLink();
     std::string arm_base_link = jointsManager->getArmLinks().front();
     std::string object_frame_id = object_name;
   
@@ -417,6 +431,41 @@ moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::reachPlan(const std:
 
     return trajectory;
 }
+
+bool SimpleAutomatedGraspExecution::executeReach(moveit_msgs::RobotTrajectory trajectory, const std::string& object_name)
+{
+     // send a goal to the action
+    control_msgs::FollowJointTrajectoryGoal jtGoal;
+    jtGoal.trajectory = trajectory.joint_trajectory;
+
+    ROS_INFO("Now sending joint trajectory goal");
+    jointTrajectoryActionClient->sendGoal(jtGoal);
+
+    // wait for the action to return
+    bool finished_before_timeout = jointTrajectoryActionClient->waitForResult(ros::Duration(15.0));
+    actionlib::SimpleClientGoalState state = jointTrajectoryActionClient->getState();
+    if (state!=actionlib::SimpleClientGoalState::SUCCEEDED)
+    {
+        if (finished_before_timeout)
+        {
+            ROS_ERROR("Could not execute joint trajectory action: %s",state.toString().c_str());
+        }
+        else
+        {
+            ROS_ERROR("Joint trajectory action did not finish before the time out.");
+        }
+        return -3;
+    }
+
+    ROS_INFO("Joint trajectory action finished: %s",state.toString().c_str());
+
+    fakeGrasp(object_name);
+
+    ROS_INFO("Finished grasping object");
+
+    return 0; 
+}
+
     
 bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
 {
@@ -498,6 +547,14 @@ bool SimpleAutomatedGraspExecution::grasp(const std::string& object_name, const 
     }*/
 }
 
+bool SimpleAutomatedGraspExecution::fakeGrasp(const std::string& object_name)
+{
+    std::string palmLinkName = jointsManager->getPalmLink();
+    graspHandler->attachObjectToRobot(object_name,palmLinkName);
+    
+    return true;
+}
+
 bool SimpleAutomatedGraspExecution::unGrasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal)
 {
     /*graspActionClient->sendGoal(graspGoal);
@@ -543,7 +600,6 @@ bool SimpleAutomatedGraspExecution::unGrasp(const std::string& object_name, cons
     return true;
 }
 
-
 bool SimpleAutomatedGraspExecution::homeArm()
 {
     sensor_msgs::JointState homeState=getHomeState(true);
@@ -584,8 +640,8 @@ bool SimpleAutomatedGraspExecution::moveArmToCartesian(const std::string& object
 
     geometry_msgs::PoseStamped object_target_pose;
     object_target_pose.header.frame_id = "tabletop_ontop";
-    object_target_pose.pose.position.x = 0.5;
-    object_target_pose.pose.position.y = 0.0;
+    object_target_pose.pose.position.x = 0.2;
+    object_target_pose.pose.position.y = 0.2;
     object_target_pose.pose.position.z = 0.2;
     object_target_pose.pose.orientation.w = 1;
     object_target_pose.pose.orientation.x = 0;
@@ -614,6 +670,63 @@ bool SimpleAutomatedGraspExecution::moveArmToCartesian(const std::string& object
     return true;
 }
 
+moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::planPlacement(geometry_msgs::Pose& pose)
+{
+    // Arbritary pose to place the object in
+    std::string effector_link = jointsManager->getEffectorLink();
+    std::string arm_base_link = jointsManager->getArmLinks().front();
+    std::string palmLinkName = jointsManager->getPalmLink();
+
+    ROS_INFO_STREAM(pose);
+    tf::Quaternion q;
+    q.setRPY(0, 55, 0);
+    geometry_msgs::PoseStamped object_target_pose;
+    object_target_pose.header.frame_id = "world";
+    object_target_pose.pose.position.x = pose.position.x;
+    object_target_pose.pose.position.y = pose.position.y;
+    object_target_pose.pose.position.z = pose.position.z;
+    object_target_pose.pose.orientation.x = q.x();
+    object_target_pose.pose.orientation.y = q.y();
+    object_target_pose.pose.orientation.z = q.z();
+    object_target_pose.pose.orientation.w = q.w();
+
+    //static const std::string PLANNING_GROUP = "jaco";
+    //moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
+
+
+
+    /*tf::Quaternion q;
+    q.setEulerZYX(0, 0.872665, 0);
+    geometry_msgs::PoseStamped ee_pose;
+    ee_pose.header.frame_id = "jaco_6_hand_limb";
+    ee_pose.pose.position.x = 0;
+    ee_pose.pose.position.y = 0;
+    ee_pose.pose.position.z = 0;
+    ee_pose.pose.orientation.x = q.x();
+    ee_pose.pose.orientation.y = q.y();
+    ee_pose.pose.orientation.z = q.z();
+    ee_pose.pose.orientation.w = q.w();*/
+
+
+
+    // build planning constraints
+    float plan_eff_pos_tol = EFF_POS_TOL * PLAN_TOLERANCE_FACTOR;
+    float plan_eff_ori_tol = EFF_ORI_TOL * PLAN_TOLERANCE_FACTOR;
+    int type = 1; // 0 = only position, 1 = pos and ori, 2 = only ori
+    moveit_msgs::Constraints reachConstraints = trajectoryPlanner->getPoseConstraint(effector_link, 
+    object_target_pose, plan_eff_pos_tol, plan_eff_ori_tol, type); 
+
+    moveit_msgs::RobotTrajectory trajectory = planMotion(
+        //object_target_pose.header.frame_id,
+        arm_base_link,
+        arm_base_link,
+        reachConstraints,
+        ARM_REACH_SPAN,
+        PLANNING_GROUP);
+
+    return trajectory;
+}
+
 moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::graspAndReachPlan(const std::string& object_name)
 {
     grasp_execution_msgs::GraspGoal graspGoal;
@@ -629,6 +742,23 @@ moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::graspAndReachPlan(co
 
     ROS_INFO_STREAM("###### Finished grasp and reach planning #######");
 }
+
+/*moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::placePlanWithEE(geometry_msgs::Pose& pose)
+{
+    grasp_execution_msgs::GraspGoal graspGoal;
+    ROS_INFO_STREAM("###### Grasp Planning #######");
+    if (!graspPlan("Box1", true, graspGoal))
+    {
+        ROS_ERROR_STREAM("Could not plan the grasp for "<<object_name);
+    }
+
+    ROS_INFO_STREAM("###### Planning ######");
+    moveit_msgs::RobotTrajectory trajectory = planPlacement(pose)
+    return trajectory; 
+
+    ROS_INFO_STREAM("###### Finished grasp and reach planning #######");
+}*/
+
 
 bool SimpleAutomatedGraspExecution::graspHomeAndUngrasp(const std::string& object_name)
 {

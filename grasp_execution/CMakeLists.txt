@@ -32,14 +32,14 @@ find_package(catkin REQUIRED COMPONENTS
 ################################################
 add_service_files(
   FILES 
-  GetModelStates.srv RequestTrajectory.srv)
+  GetModelStates.srv RequestTrajectory.srv RequestPlacementTrajectory.srv)
 
 ################################################
 ## Generate Message File ##
 ################################################
 generate_messages(
   DEPENDENCIES
-  std_msgs gazebo_msgs moveit_msgs
+  std_msgs gazebo_msgs moveit_msgs geometry_msgs
 )
 
 ################################################

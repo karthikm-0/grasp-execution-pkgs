@@ -1,0 +1,7 @@
+# Request the goal pose you want to reach after an object is in the robot's hands
+geometry_msgs/Pose pose
+
+---
+
+# Get back robot trajectory
+moveit_msgs/RobotTrajectory robotTrajectory

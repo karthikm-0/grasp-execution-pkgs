@@ -46,15 +46,10 @@ public:
     bool reach(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
     
     /**
-     * Does motion planning but no execution
-     */
-    moveit_msgs::RobotTrajectory reachPlan(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
-    
-    /**
      * Grasps the object
      */
     bool grasp(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
-   
+
     /**
      * Un-grasps the object
      */
@@ -76,10 +71,38 @@ public:
      */
     bool graspHomeAndUngrasp(const std::string& object_name);
 
+    /** CUSTOM METHODS TO WORK WITH UNITY
     /**
      * Test method to run grasp plan and reach plan
      */
     moveit_msgs::RobotTrajectory graspAndReachPlan(const std::string& object_name);
+
+    /**
+     * Does motion planning but no execution
+     */
+    moveit_msgs::RobotTrajectory reachPlan(const std::string& object_name, const grasp_execution_msgs::GraspGoal& graspGoal);
+        
+    /**
+     * Execute reach plan and attach object to moveit
+     */
+    bool executeReach(moveit_msgs::RobotTrajectory trajectory, const std::string& object_name);
+
+    /**
+     * Fake grasp the object
+     */
+    bool fakeGrasp(const std::string& object_name);
+
+    /** 
+     * Plan arbitrary position to place the object with grasp goal
+     */
+    moveit_msgs::RobotTrajectory planPlacement(geometry_msgs::Pose& pose);
+
+    /**
+     * Test method to run a place plan after grasping (when the robot needs to go to a location to drop off something)
+     * In particular we don't actually need an object name but we still need to generate a grasp so that the motion
+     * plan works similar to reaching (but now with placing)
+     */
+    moveit_msgs::RobotTrajectory placePlanWithEE(geometry_msgs::Pose& pose);
 
 protected:
     virtual bool initImpl()=0;

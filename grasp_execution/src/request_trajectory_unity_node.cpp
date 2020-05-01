@@ -4,6 +4,7 @@
 #include <grasp_execution/SimpleAutomatedGraspFromFile.h>
 #include <grasp_execution/SimpleAutomatedGraspOnlinePlanning.h>
 #include <grasp_execution/RequestTrajectory.h>
+#include <grasp_execution/RequestPlacementTrajectory.h>
 
 std::string GRASP_FILENAME;
 
@@ -134,6 +135,41 @@ void selectCube(const std_msgs::String::ConstPtr& msg)
     // Set up and execute grasp
 }
 
+bool placement_trajectory(grasp_execution::RequestPlacementTrajectory::Request &req,
+grasp_execution::RequestPlacementTrajectory::Response &res)
+{
+  grasp_execution::SimpleAutomatedGraspExecution * graspExe;
+  graspExe = new grasp_execution::SimpleAutomatedGraspFromTop();
+
+  // Make sure we can execute grasp
+  if (!graspExe)
+  {
+      ROS_ERROR("Unknown run type");
+      return false;
+  }
+
+  // Plan grasp and reach
+  if(!graspExe->init())
+  {
+    ROS_ERROR("Failed to run automated grasp execution");
+    return false;
+  }
+
+  else
+  {
+    res.robotTrajectory = graspExe->planPlacement(req.pose);
+  }
+
+  ROS_INFO_STREAM(res.robotTrajectory.joint_trajectory);
+  ROS_INFO("Success, you have requested placement trajectory!");
+
+  // Execute the reach plan
+  std::string obj_name = "Random";
+  graspExe->executeReach(res.robotTrajectory, obj_name);
+
+  return true;
+}
+
 bool trajectory(grasp_execution::RequestTrajectory::Request &req,
 grasp_execution::RequestTrajectory::Response &res)
 {
@@ -157,6 +193,7 @@ grasp_execution::RequestTrajectory::Response &res)
   if(!graspExe->init())
   {
     ROS_ERROR("Failed to run automated grasp execution");
+    return false;
   }
 
   else
@@ -165,7 +202,10 @@ grasp_execution::RequestTrajectory::Response &res)
   }
 
   ROS_INFO_STREAM(res.robotTrajectory.joint_trajectory);
-  ROS_INFO("Success, you have requested trajectory!");
+  ROS_INFO("Success, you have requested reach trajectory!");
+
+  // Execute the reach plan
+  graspExe->executeReach(res.robotTrajectory, req.name);
 
   return true;
 }
@@ -210,9 +250,10 @@ int main(int argc, char **argv)
       }
     }
 
-    // Launch a service to request trajectories
+    // Launch a service to request trajectories for reaching and then for placing
     ros::ServiceServer service = n.advertiseService("request_trajectories_srv", trajectory);
-
+    
+    ros::ServiceServer service_two = n.advertiseService("request_placement_trajectories_srv", placement_trajectory);
 
 
     //executeGrasp("Box1"); 
