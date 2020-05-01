@@ -693,8 +693,6 @@ moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::planPlacement(geomet
     //static const std::string PLANNING_GROUP = "jaco";
     //moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
-
-
     /*tf::Quaternion q;
     q.setEulerZYX(0, 0.872665, 0);
     geometry_msgs::PoseStamped ee_pose;
@@ -706,7 +704,6 @@ moveit_msgs::RobotTrajectory SimpleAutomatedGraspExecution::planPlacement(geomet
     ee_pose.pose.orientation.y = q.y();
     ee_pose.pose.orientation.z = q.z();
     ee_pose.pose.orientation.w = q.w();*/
-
 
 
     // build planning constraints
